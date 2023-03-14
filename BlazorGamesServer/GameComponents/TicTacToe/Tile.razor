@@ -1,0 +1,14 @@
+﻿<button @onclick="MadeMove">@ChildContent</button>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public Action? Move { get; set; }
+
+    private void MadeMove()
+    {
+        Move.Invoke();
+    }
+}

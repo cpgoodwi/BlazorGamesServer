@@ -1,7 +1,48 @@
 ﻿@page "/tictactoe"
+@using BlazorGamesServer.Data
+@inject TicTacToeService TicTacToeGame
+@using BlazorGamesServer.GameComponents.TicTacToe
 
 <h3>TicTacToe</h3>
 
-@code {
+<h4>Current Turn: @(isXMove ? 'X' : 'O')</h4> @*Why isn't this updating???*@
 
+<div class="board">
+    @for (int x = 0; x < board.GetLength(0); x++)
+    {
+        <div class="board-row">
+            @for (int y = 0; y < board.GetLength(1); y++)
+            {
+                var xIndex = x;
+                var yIndex = y; // why blazor ???
+                <Tile Move="async () => await MakeMove(xIndex, yIndex)">@board[xIndex,yIndex].Value</Tile>
+            }
+        </div>
+    }
+</div>
+
+<button @onclick="ResetGame">Reset Game</button>
+
+@code {
+    private BlazorGamesServer.Data.TicTacToe.Tile[,]? board;
+    private bool isXMove = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        board = await TicTacToeGame.GetBoardAsync();
+        isXMove = await TicTacToeGame.GetTurnAsync();
+    }
+
+    private async Task ResetGame()
+    {
+        await TicTacToeGame.ResetAsync();
+        isXMove = await TicTacToeGame.GetTurnAsync();
+    }
+
+    private async Task MakeMove(int x, int y)
+    {
+        await TicTacToeGame.MakeMoveAsync(x, y);
+        Console.WriteLine(isXMove ? 'X' : 'O');
+        isXMove = !isXMove;
+    }
 }
