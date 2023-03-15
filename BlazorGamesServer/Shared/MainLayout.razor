@@ -5,3 +5,14 @@
 <NavMenu />
 
 <main> @Body </main>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var userCheck = await ProtectedSessionStore.GetAsync<User>("user");
+        if (!userCheck.Success)
+        {
+            await ProtectedSessionStore.SetAsync("user", new User("guest", UserType.Guest));
+        }
+    }
+}

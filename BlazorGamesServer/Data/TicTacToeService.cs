@@ -2,6 +2,10 @@
 {
     public class TicTacToeService
     {
+        /*
+            SERVICE PROPERTIES
+         */
+
         private readonly TicTacToe.Tile[,] Board = new TicTacToe.Tile[3, 3] {
             { new TicTacToe.Tile(), new TicTacToe.Tile(), new TicTacToe.Tile() },
             { new TicTacToe.Tile(), new TicTacToe.Tile(), new TicTacToe.Tile() },
@@ -9,6 +13,12 @@
         };
 
         private bool IsXMove = true;
+
+        private List<User> Lobby = new List<User>();
+
+        /*
+            GAME LOGIC
+         */
 
         public Task<TicTacToe.Tile[,]> GetBoardAsync()
         {
@@ -40,6 +50,22 @@
             Board[x, y].SetValue(IsXMove ? 'X' : 'O');
 
             IsXMove = !IsXMove;
+
+            return Task.CompletedTask;
+        }
+
+        /*
+            LOBBY LOGIC
+         */
+
+        public Task<List<User>> LobbyGetListAsync()
+        {
+            return Task.FromResult(Lobby);
+        }
+
+        public Task LobbyRemoveUserAsync(Guid id)
+        {
+            
 
             return Task.CompletedTask;
         }

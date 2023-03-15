@@ -1,7 +1,8 @@
 ﻿@page "/tictactoe"
-@using BlazorGamesServer.Data
 @inject TicTacToeService TicTacToeGame
 @using BlazorGamesServer.GameComponents.TicTacToe
+
+@implements IDisposable
 
 <h3>TicTacToe</h3>
 
@@ -25,15 +26,31 @@
 <button @onclick="ResetGame">Reset Game</button>
 
 @code {
-    private BlazorGamesServer.Data.TicTacToe.Tile[,]? board;
+    private BlazorGamesServer.Data.TicTacToe.Tile[,]? board; // TODO: maybe change this to array of chars
     private bool isXMove = false;
     private char turn = 'X';
     private int count = 0;
+
+    private List<User> lobby = new List<User>();
 
     protected override async Task OnInitializedAsync()
     {
         board = await TicTacToeGame.GetBoardAsync();
         isXMove = await TicTacToeGame.GetTurnAsync();
+
+        lobby = await TicTacToeGame.LobbyGetListAsync();
+
+        //var userCheck = await ProtectedSessionStore.GetAsync<User>("user");
+        //if (!userCheck.Success)
+        //{
+        //    await ProtectedSessionStore.SetAsync("user", new User("guest", UserType.Guest));
+        //}
+    }
+
+    // This should control what happens when the page is closed or left
+    public void Dispose()
+    {
+
     }
 
     private async Task ResetGame()
