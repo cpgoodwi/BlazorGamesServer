@@ -7,8 +7,5 @@
     [Parameter]
     public Action? Move { get; set; }
 
-    private void MadeMove()
-    {
-        Move.Invoke();
-    }
+    private void MadeMove() => Move.Invoke();
 }
