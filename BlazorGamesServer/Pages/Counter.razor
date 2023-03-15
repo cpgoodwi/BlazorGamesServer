@@ -1,0 +1,24 @@
+﻿@page "/counter"
+
+<h3>Counter</h3>
+
+<h4>Current Count: @count</h4>
+<button @onclick="incrementCount">Increment</button>
+
+<h4>Current Count: @(turn ? 'X' : 'O')</h4>
+<button @onclick="nextTurn">Increment</button>
+
+@code {
+    private int count = 0;
+    private bool turn = true;
+
+    private void incrementCount()
+    {
+        count++;
+    }
+
+    private void nextTurn()
+    {
+        turn = !turn;
+    }
+}

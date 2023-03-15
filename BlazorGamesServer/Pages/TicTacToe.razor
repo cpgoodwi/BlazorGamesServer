@@ -5,7 +5,8 @@
 
 <h3>TicTacToe</h3>
 
-<h4>Current Turn: @(isXMove ? 'X' : 'O')</h4> @*Why isn't this updating???*@
+<h4>Current Turn: @(isXMove ? 'X' : 'O')</h4> @*It is updating but as part of the client...*@
+<h4>Turn Count: @count</h4>
 
 <div class="board">
     @for (int x = 0; x < board.GetLength(0); x++)
@@ -13,7 +14,7 @@
         <div class="board-row">
             @for (int y = 0; y < board.GetLength(1); y++)
             {
-                var xIndex = x;
+                var xIndex = x; // why do I need to copy the index variables ??
                 var yIndex = y; // why, blazor ???
                 <Tile Move="async () => await MakeMove(xIndex, yIndex)">@board[xIndex,yIndex].Value</Tile>
             }
@@ -26,6 +27,8 @@
 @code {
     private BlazorGamesServer.Data.TicTacToe.Tile[,]? board;
     private bool isXMove = false;
+    private char turn = 'X';
+    private int count = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -39,10 +42,21 @@
         isXMove = await TicTacToeGame.GetTurnAsync();
     }
 
+    private async Task GetTurn()
+    {
+        isXMove = await TicTacToeGame.GetTurnAsync();
+    }
+
     private async Task MakeMove(int x, int y)
     {
+        //Console.WriteLine(isXMove ? 'X' : 'O');
+        //isXMove = !isXMove;
+        //await GetTurn();
+
         await TicTacToeGame.MakeMoveAsync(x, y);
-        Console.WriteLine(isXMove ? 'X' : 'O');
+
         isXMove = !isXMove;
+        count++;
+        StateHasChanged();
     }
 }
