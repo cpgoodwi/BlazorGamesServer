@@ -14,7 +14,7 @@
             @for (int y = 0; y < board.GetLength(1); y++)
             {
                 var xIndex = x;
-                var yIndex = y; // why blazor ???
+                var yIndex = y; // why, blazor ???
                 <Tile Move="async () => await MakeMove(xIndex, yIndex)">@board[xIndex,yIndex].Value</Tile>
             }
         </div>
