@@ -6,8 +6,7 @@
 <PageTitle>Index</PageTitle>
 
 <label>
-    User:
-    <input @bind="userInput" />
+    @currentUser?.Name (@currentUser?.Type)
 </label>
 <label>
     Message:
@@ -27,7 +26,7 @@
 @code {
     private HubConnection? hubConnection;
     private List<string> messages = new List<string>();
-    private string? userInput;
+    private User? currentUser;
     private string? messageInput;
 
     protected override async Task OnInitializedAsync()
@@ -36,9 +35,9 @@
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
             .Build();
 
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        hubConnection.On<User, string>("ReceiveMessage", (user, message) =>
         {
-            var encodedMsg = $"{user}: {message}";
+            var encodedMsg = $"{user.Name} {user.Type}: {message}";
             messages.Add(encodedMsg);
             InvokeAsync(StateHasChanged);
         });
@@ -46,11 +45,21 @@
         await hubConnection.StartAsync();
     }
 
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        var userState = await ProtectedSessionStore.GetAsync<User>("user");
+        if (userState.Success)
+        {
+            currentUser = userState.Value;
+            StateHasChanged();
+        }
+    }
+
     private async Task Send()
     {
         if (hubConnection is not null)
         {
-            await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+            await hubConnection.SendAsync("SendMessage", currentUser, messageInput);
         }
     }
 

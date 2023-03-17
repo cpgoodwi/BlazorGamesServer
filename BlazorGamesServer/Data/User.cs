@@ -19,5 +19,10 @@
             Id = Guid.NewGuid();
         }
 
+        public void SetName(string? name)
+        {
+            Name = name;
+            Type = UserType.Player;
+        }
     }
 }

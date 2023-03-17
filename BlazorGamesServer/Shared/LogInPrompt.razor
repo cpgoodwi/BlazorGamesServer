@@ -1,0 +1,38 @@
+﻿@using BlazorGamesServer.Data
+
+<h3>LogInPrompt</h3>
+
+@if (isGuest)
+{
+    <label>
+        Username:
+        <input @bind="userName" size="20" required />
+    </label>
+    <button type="button" @onclick="logInSubmit">Log In</button> 
+}
+
+@code {
+    private bool isGuest = false; // false because I don't want it to load on first render
+    private string? userName;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var userState = await ProtectedSessionStore.GetAsync<User>("user");
+        if (userState.Success)
+        {
+            isGuest = userState.Value?.Type == UserType.Guest;
+            StateHasChanged();
+        }
+    }
+
+    private async Task logInSubmit()
+    {
+        var userState = await ProtectedSessionStore.GetAsync<User>("user");
+        if (userState.Success)
+        {
+            userState.Value?.SetName(userName);
+            await ProtectedSessionStore.SetAsync("user", userState.Value);
+            StateHasChanged();
+        }
+    }
+}
