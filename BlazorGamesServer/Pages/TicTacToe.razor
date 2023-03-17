@@ -2,7 +2,7 @@
 @inject TicTacToeService TicTacToeGame
 @using BlazorGamesServer.GameComponents.TicTacToe
 
-@implements IDisposable
+@*@implements IDisposable*@
 
 <h3>TicTacToe</h3>
 
@@ -25,6 +25,22 @@
 
 <button @onclick="ResetGame">Reset Game</button>
 
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Id</th>
+    </tr>
+    @foreach (var user in lobby)
+    {
+        <tr>
+            <td>@user.Name</td>
+            <td>@user.Type</td>
+            <td>@user.Id</td>
+        </tr>
+    }
+</table>
+
 @code {
     private BlazorGamesServer.Data.TicTacToe.Tile[,]? board; // TODO: maybe change this to array of chars
     private bool isXMove = false;
@@ -38,20 +54,24 @@
         board = await TicTacToeGame.GetBoardAsync();
         isXMove = await TicTacToeGame.GetTurnAsync();
 
-        lobby = await TicTacToeGame.LobbyGetListAsync();
+        var user = await ProtectedSessionStore.GetAsync<User>("user");
+        if (user.Success)
+        {
+            await TicTacToeGame.LobbyRemoveUserAsync(user.Value.Id); // TODO: make this add person to lobby on server 
+        }
 
-        //var userCheck = await ProtectedSessionStore.GetAsync<User>("user");
-        //if (!userCheck.Success)
-        //{
-        //    await ProtectedSessionStore.SetAsync("user", new User("guest", UserType.Guest));
-        //}
+        lobby = await TicTacToeGame.LobbyGetListAsync();
     }
 
     // This should control what happens when the page is closed or left
-    public void Dispose()
-    {
-
-    }
+    //public async void Dispose()
+    //{
+    //    var user = await ProtectedSessionStore.GetAsync<User>("user");
+    //    if (user.Success)
+    //    {
+    //        await TicTacToeGame.LobbyRemoveUserAsync(user.Value.Id);
+    //    }
+    //}
 
     private async Task ResetGame()
     {

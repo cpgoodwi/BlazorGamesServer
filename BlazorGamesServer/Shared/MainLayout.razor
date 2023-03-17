@@ -7,7 +7,7 @@
 <main> @Body </main>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         var userCheck = await ProtectedSessionStore.GetAsync<User>("user");
         if (!userCheck.Success)

@@ -10,7 +10,7 @@
     {
         public string? Name { get; set; }
         public UserType? Type { get; set; }
-        public Guid? Id { get; set; }
+        public Guid Id { get; }
 
         public User(string? name, UserType? type)
         {

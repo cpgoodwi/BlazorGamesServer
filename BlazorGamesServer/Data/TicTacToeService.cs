@@ -63,9 +63,16 @@
             return Task.FromResult(Lobby);
         }
 
+        public Task LobbyAddUserAsync(User user)
+        {
+            Lobby.Add(user);
+
+            return Task.CompletedTask;
+        }
+
         public Task LobbyRemoveUserAsync(Guid id)
         {
-            
+            Lobby.RemoveAll(user => user.Id == id);
 
             return Task.CompletedTask;
         }
