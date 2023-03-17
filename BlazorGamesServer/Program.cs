@@ -12,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+// add User Stats Singleton? TODO: research better way to do this...
+builder.Services.AddSingleton<UserStatsService>();
+
 // add games as services?
 builder.Services.AddSingleton<TicTacToeService>();
 
@@ -42,6 +45,7 @@ app.MapBlazorHub();
 
 // including hub routes?
 app.MapHub<ChatHub>("/chathub"); // from SignalR tutorial
+app.MapHub<TicTacToeHub>("/tictactoehub");
 
 app.MapFallbackToPage("/_Host");
 

@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject UserStatsService UserStats
 
 <PageTitle>Blazor Games Server</PageTitle>
 
@@ -7,12 +8,21 @@
 <main> @Body </main>
 
 @code {
+    int userCount = 0;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        userCount = await UserStats.GetCountAsync();
+
         var userCheck = await ProtectedSessionStore.GetAsync<User>("user");
         if (!userCheck.Success)
         {
-            await ProtectedSessionStore.SetAsync("user", new User("guest", UserType.Guest));
+            await ProtectedSessionStore.SetAsync("user", new User($"guest{userCount}", UserType.Guest));
+            await UserStats.IncreaseCountAsync();
+        }
+        else
+        {
+            Console.WriteLine(userCheck.Value?.Name);
         }
     }
 }

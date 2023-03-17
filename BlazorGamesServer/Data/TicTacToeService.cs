@@ -12,7 +12,7 @@
             { new TicTacToe.Tile(), new TicTacToe.Tile(), new TicTacToe.Tile() },
         };
 
-        private bool IsXMove = true;
+        public bool IsXMove { get; private set; } = true;
 
         private List<User> Lobby = new List<User>();
 

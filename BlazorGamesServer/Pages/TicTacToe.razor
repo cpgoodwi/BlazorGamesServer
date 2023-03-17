@@ -1,19 +1,21 @@
 ﻿@page "/tictactoe"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
 @inject TicTacToeService TicTacToeGame
 @using BlazorGamesServer.GameComponents.TicTacToe
 
-@*@implements IDisposable*@
+<PageTitle>Tic-Tac-Toe</PageTitle>
 
 <h3>TicTacToe</h3>
 
 <h4>Current Turn: @(isXMove ? 'X' : 'O')</h4> @*It is updating but as part of the client...*@
-<h4>Turn Count: @count</h4>
 
 <div class="board">
-    @for (int x = 0; x < board.GetLength(0); x++)
+    @for (int x = 0; x < board?.GetLength(0); x++)
     {
         <div class="board-row">
-            @for (int y = 0; y < board.GetLength(1); y++)
+            @for (int y = 0; y < board?.GetLength(1); y++)
             {
                 var xIndex = x; // why do I need to copy the index variables ??
                 var yIndex = y; // why, blazor ???
@@ -42,58 +44,60 @@
 </table>
 
 @code {
+    private HubConnection? hubConnection;
+
     private BlazorGamesServer.Data.TicTacToe.Tile[,]? board; // TODO: maybe change this to array of chars
     private bool isXMove = false;
-    private char turn = 'X';
-    private int count = 0;
 
-    private List<User> lobby = new List<User>();
+    private List<User> lobby = new List<User>(); // TODO: Get lobby to work with websockets
 
     protected override async Task OnInitializedAsync()
     {
         board = await TicTacToeGame.GetBoardAsync();
         isXMove = await TicTacToeGame.GetTurnAsync();
 
-        var user = await ProtectedSessionStore.GetAsync<User>("user");
-        if (user.Success)
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/tictactoehub"))
+            .Build();
+
+        hubConnection.On("BoardChange", () =>
         {
-            await TicTacToeGame.LobbyRemoveUserAsync(user.Value.Id); // TODO: make this add person to lobby on server 
-        }
+            isXMove = TicTacToeGame.IsXMove;
+            InvokeAsync(StateHasChanged);
+        });
 
-        lobby = await TicTacToeGame.LobbyGetListAsync();
+        await hubConnection.StartAsync();
     }
-
-    // This should control what happens when the page is closed or left
-    //public async void Dispose()
-    //{
-    //    var user = await ProtectedSessionStore.GetAsync<User>("user");
-    //    if (user.Success)
-    //    {
-    //        await TicTacToeGame.LobbyRemoveUserAsync(user.Value.Id);
-    //    }
-    //}
 
     private async Task ResetGame()
     {
         await TicTacToeGame.ResetAsync();
         isXMove = await TicTacToeGame.GetTurnAsync();
-    }
 
-    private async Task GetTurn()
-    {
-        isXMove = await TicTacToeGame.GetTurnAsync();
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("UpdateBoard");
+        }
     }
 
     private async Task MakeMove(int x, int y)
     {
-        //Console.WriteLine(isXMove ? 'X' : 'O');
-        //isXMove = !isXMove;
-        //await GetTurn();
-
         await TicTacToeGame.MakeMoveAsync(x, y);
+        isXMove = await TicTacToeGame.GetTurnAsync();
 
-        isXMove = !isXMove;
-        count++;
-        StateHasChanged();
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("UpdateBoard");
+        }
+    }
+
+    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
     }
 }
