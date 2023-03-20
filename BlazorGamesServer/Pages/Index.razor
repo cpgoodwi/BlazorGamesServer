@@ -16,16 +16,16 @@
 
 <hr>
 
-<ul id="messagesList">
-    @foreach (var message in messages)
+<ul>
+    @foreach (var messagePair in messagePairs)
     {
-        <li>@message</li>
+        <li>@messagePair.user.Name (@messagePair.user.Type):@messagePair.message</li>
     }
 </ul>
 
 @code {
     private HubConnection? hubConnection;
-    private List<string> messages = new List<string>();
+    private List<(User user, string message)> messagePairs = new List<(User, string)>();
     private User? currentUser;
     private string? messageInput;
 
@@ -37,14 +37,15 @@
 
         hubConnection.On<User, string>("ReceiveMessage", (user, message) =>
         {
-            var encodedMsg = $"{user.Name} {user.Type}: {message}";
-            messages.Add(encodedMsg);
+            var messagePair = (user, message);
+            messagePairs.Add(messagePair);
             InvokeAsync(StateHasChanged);
         });
 
         await hubConnection.StartAsync();
     }
 
+    // TODO: possibly modify this to properly handle state and load new information
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         var userState = await ProtectedSessionStore.GetAsync<User>("user");
@@ -63,8 +64,7 @@
         }
     }
 
-    public bool IsConnected =>
-        hubConnection?.State == HubConnectionState.Connected;
+    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
 
     public async ValueTask DisposeAsync()
     {

@@ -4,26 +4,37 @@
 <PageTitle>Blazor Games Server</PageTitle>
 
 <NavMenu />
-<LogInPrompt />
+
+@if (isGuest)
+{
+    <LogInPrompt />
+}
 
 <main> @Body </main>
 
 @code {
     int userCount = 0;
+    bool isGuest = false; // false because I don't want it to load on first render
+
+    protected override async Task OnInitializedAsync()
+    {
+        userCount = await UserStats.GetCountAsync();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        userCount = await UserStats.GetCountAsync();
-
-        var userCheck = await ProtectedSessionStore.GetAsync<User>("user");
-        if (!userCheck.Success)
+        var userState = await ProtectedSessionStore.GetAsync<User>("user");
+        if (!userState.Success)
         {
             await ProtectedSessionStore.SetAsync("user", new User($"guest{userCount}", UserType.Guest));
             await UserStats.IncreaseCountAsync();
+            isGuest = false;
+            StateHasChanged();
         }
         else
         {
-            Console.WriteLine(userCheck.Value?.Name);
+            isGuest = userState.Value?.Type == UserType.Guest;
+            StateHasChanged();
         }
     }
 }
