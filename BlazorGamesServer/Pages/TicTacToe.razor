@@ -49,7 +49,8 @@
     private BlazorGamesServer.Data.TicTacToe.Tile[,]? board; // TODO: maybe change this to array of chars
     private bool isXMove = false;
 
-    private List<User> lobby = new List<User>(); // TODO: Get lobby to work with websockets
+    private User? currentUser;
+    private List<User> lobby = new List<User>(); // TODO: Get lobby to work with SignalR
 
     protected override async Task OnInitializedAsync()
     {
@@ -67,6 +68,20 @@
         });
 
         await hubConnection.StartAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadStateAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadStateAsync()
+    {
+        
     }
 
     private async Task ResetGame()

@@ -2,11 +2,13 @@
 
 <h3>LogInPrompt</h3>
 
-<label>
-    Username:
-    <input @bind="userName" size="20" required />
-</label>
-<button type="button" @onclick="logInSubmit">Log In</button>
+<form> @*form because I want it to reload after login I think...*@
+    <label>
+        Username:
+        <input @bind="userName" size="20" required />
+    </label>
+    <button @onclick="logInSubmit">Log In</button>
+</form>
 
 @code {
     private string? userName;

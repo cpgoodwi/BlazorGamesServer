@@ -5,16 +5,28 @@
 
 <NavMenu />
 
-@if (isGuest)
+@if (isConnected) // checking for session info before rendering adding the content to render
 {
-    <LogInPrompt />
+    @if (isGuest)
+    {
+        <LogInPrompt />
+    }
+
+    <hr />
+
+    <SessionStateProvider>
+        <main> @Body </main>
+    </SessionStateProvider>
+}
+else
+{
+    <p>checking session info...</p>
 }
 
-<main> @Body </main>
-
 @code {
-    int userCount = 0;
-    bool isGuest = false; // false because I don't want it to load on first render
+    private int userCount;
+    private bool isConnected;
+    private bool isGuest;
 
     protected override async Task OnInitializedAsync()
     {
@@ -23,18 +35,27 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            isConnected = true;
+            await LoadStateAsync();
+            StateHasChanged();
+        }
+    }
+
+    // using LoadStateAsync method to allow server prerender and avoid JSInterop error
+    private async Task LoadStateAsync()
+    {
         var userState = await ProtectedSessionStore.GetAsync<User>("user");
         if (!userState.Success)
         {
             await ProtectedSessionStore.SetAsync("user", new User($"guest{userCount}", UserType.Guest));
             await UserStats.IncreaseCountAsync();
-            isGuest = false;
-            StateHasChanged();
+            isGuest = true;
         }
         else
         {
             isGuest = userState.Value?.Type == UserType.Guest;
-            StateHasChanged();
         }
     }
 }

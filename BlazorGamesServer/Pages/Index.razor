@@ -5,14 +5,21 @@
 
 <PageTitle>Index</PageTitle>
 
-<label>
-    @currentUser?.Name (@currentUser?.Type)
-</label>
-<label>
-    Message:
-    <input @bind="messageInput" size="50" />
-</label>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+@if (sessionState is not null) // checking for session info
+{
+    <label>
+        @currentUser?.Name (@currentUser?.Type)
+    </label>
+    <label>
+        Message:
+        <input @bind="messageInput" size="50" />
+    </label>
+    <button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+}
+else
+{
+    <p>Loading Session info...</p>
+}
 
 <hr>
 
@@ -29,8 +36,18 @@
     private User? currentUser;
     private string? messageInput;
 
+    [CascadingParameter]
+    private SessionStateProvider? sessionState { get; set; }
+
+    private bool isConnected; // used for stateful server rendering
+
     protected override async Task OnInitializedAsync()
     {
+        if (sessionState is not null)
+        {
+            currentUser = sessionState.currentUser;
+        }
+
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
             .Build();
@@ -45,16 +62,24 @@
         await hubConnection.StartAsync();
     }
 
-    // TODO: possibly modify this to properly handle state and load new information
-    protected async override Task OnAfterRenderAsync(bool firstRender)
-    {
-        var userState = await ProtectedSessionStore.GetAsync<User>("user");
-        if (userState.Success)
-        {
-            currentUser = userState.Value;
-            StateHasChanged();
-        }
-    }
+    //protected async override Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        isConnected = true;
+    //        await LoadStateAsync();
+    //        StateHasChanged();
+    //    }
+    //}
+
+    //private async Task LoadStateAsync()
+    //{
+    //    var userState = await ProtectedSessionStore.GetAsync<User>("user");
+    //    if (userState.Success)
+    //    {
+    //        currentUser = userState.Value;
+    //    }
+    //}
 
     private async Task Send()
     {
