@@ -27,7 +27,10 @@
 
 <button @onclick="ResetGame">Reset Game</button>
 
-<Lobby LobbyList="@TicTacToeGame.Lobby" />
+<div id="social">
+    <Lobby LobbyList="@TicTacToeGame.Lobby" />
+    <Chat />
+</div>
 
 @code {
     [CascadingParameter]

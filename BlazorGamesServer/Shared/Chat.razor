@@ -4,12 +4,13 @@
 
 <h3>Chat</h3>
 
-
-<label>
-    Message:
-    <input @bind="messageInput" size="50" required />
-</label>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+<form @onsubmit="Send" @onsubmit:preventDefault="true">
+    <label>
+        Message:
+        <input @bind="messageInput" size="50" required />
+    </label>
+    <button type="submit" disabled="@(!IsConnected)">Send</button>
+</form>
 
 <ul>
     @foreach (var messagePair in messagePairs)
