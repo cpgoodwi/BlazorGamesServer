@@ -14,7 +14,7 @@
 
         public bool IsXMove { get; private set; } = true;
 
-        private List<User> Lobby = new List<User>();
+        public List<User> Lobby { get; private set; } = new List<User>();
 
         /*
             GAME LOGIC
@@ -72,6 +72,7 @@
 
         public Task LobbyRemoveUserAsync(Guid id)
         {
+            // TODO: understand why the id is changing upon log in...
             Lobby.RemoveAll(user => user.Id == id);
 
             return Task.CompletedTask;

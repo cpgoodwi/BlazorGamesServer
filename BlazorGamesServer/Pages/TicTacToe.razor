@@ -27,13 +27,14 @@
 
 <button @onclick="ResetGame">Reset Game</button>
 
+@*TODO: extract lobby to separate reusable component and add per game chat hub*@
 <table>
     <tr>
         <th>Name</th>
         <th>Type</th>
         <th>Id</th>
     </tr>
-    @foreach (var user in lobby)
+    @foreach (var user in TicTacToeGame.Lobby)
     {
         <tr>
             <td>@user.Name</td>
@@ -47,7 +48,8 @@
     [CascadingParameter]
     private SessionStateProvider? sessionState { get; set; }
 
-    private HubConnection? hubConnection;
+    private HubConnection? ticTacToeHubConnection;
+    private HubConnection? lobbyHubConnection;
 
     private BlazorGamesServer.Data.TicTacToe.Tile[,]? board; // TODO: maybe change this to array of chars
     private bool isXMove = false;
@@ -57,6 +59,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Loading page variables on initialize
         if (sessionState is not null)
         {
             currentUser = sessionState.currentUser;
@@ -65,17 +68,40 @@
         board = await TicTacToeGame.GetBoardAsync();
         isXMove = await TicTacToeGame.GetTurnAsync();
 
-        hubConnection = new HubConnectionBuilder()
+        // handling and defining TicTacToe game hub connection
+        ticTacToeHubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/tictactoehub"))
             .Build();
 
-        hubConnection.On("BoardChange", () =>
+        ticTacToeHubConnection.On("BoardChange", () =>
         {
             isXMove = TicTacToeGame.IsXMove;
             InvokeAsync(StateHasChanged);
         });
 
-        await hubConnection.StartAsync();
+        await ticTacToeHubConnection.StartAsync();
+
+        // handling lobby hub connection
+        lobbyHubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/lobbyhub"))
+            .Build();
+
+        lobbyHubConnection.On("LobbyChange", () =>
+        {
+            InvokeAsync(StateHasChanged);
+        });
+
+        await lobbyHubConnection.StartAsync();
+
+        if (currentUser is not null)
+        {
+            await TicTacToeGame.LobbyAddUserAsync(currentUser);
+
+            if (lobbyHubConnection is not null)
+            {
+                await lobbyHubConnection.SendAsync("UpdateLobby");
+            }
+        }
     }
 
     private async Task ResetGame()
@@ -83,9 +109,9 @@
         await TicTacToeGame.ResetAsync();
         isXMove = await TicTacToeGame.GetTurnAsync();
 
-        if (hubConnection is not null)
+        if (ticTacToeHubConnection is not null)
         {
-            await hubConnection.SendAsync("UpdateBoard");
+            await ticTacToeHubConnection.SendAsync("UpdateBoard");
         }
     }
 
@@ -94,19 +120,25 @@
         await TicTacToeGame.MakeMoveAsync(x, y);
         isXMove = await TicTacToeGame.GetTurnAsync();
 
-        if (hubConnection is not null)
+        if (ticTacToeHubConnection is not null)
         {
-            await hubConnection.SendAsync("UpdateBoard");
+            await ticTacToeHubConnection.SendAsync("UpdateBoard");
         }
     }
 
-    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+    public bool IsConnected => ticTacToeHubConnection?.State == HubConnectionState.Connected;
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection is not null)
+        if (ticTacToeHubConnection is not null)
         {
-            await hubConnection.DisposeAsync();
+            await ticTacToeHubConnection.DisposeAsync();
+        }
+
+        if (lobbyHubConnection is not null && currentUser is not null)
+        {
+            await TicTacToeGame.LobbyRemoveUserAsync(currentUser.Id);
+            await lobbyHubConnection.SendAsync("UpdateLobby");
         }
     }
 }

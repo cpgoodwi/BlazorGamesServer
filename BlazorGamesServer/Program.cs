@@ -46,6 +46,7 @@ app.MapBlazorHub();
 // including hub routes?
 app.MapHub<ChatHub>("/chathub"); // from SignalR tutorial
 app.MapHub<TicTacToeHub>("/tictactoehub");
+app.MapHub<LobbyHub>("/lobbyhub");
 
 app.MapFallbackToPage("/_Host");
 
