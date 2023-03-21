@@ -44,6 +44,9 @@
 </table>
 
 @code {
+    [CascadingParameter]
+    private SessionStateProvider? sessionState { get; set; }
+
     private HubConnection? hubConnection;
 
     private BlazorGamesServer.Data.TicTacToe.Tile[,]? board; // TODO: maybe change this to array of chars
@@ -54,6 +57,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (sessionState is not null)
+        {
+            currentUser = sessionState.currentUser;
+        }
+
         board = await TicTacToeGame.GetBoardAsync();
         isXMove = await TicTacToeGame.GetTurnAsync();
 
@@ -68,20 +76,6 @@
         });
 
         await hubConnection.StartAsync();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await LoadStateAsync();
-            StateHasChanged();
-        }
-    }
-
-    private async Task LoadStateAsync()
-    {
-        
     }
 
     private async Task ResetGame()
