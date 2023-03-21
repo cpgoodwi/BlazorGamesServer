@@ -39,8 +39,6 @@ else
     [CascadingParameter]
     private SessionStateProvider? sessionState { get; set; }
 
-    private bool isConnected; // used for stateful server rendering
-
     protected override async Task OnInitializedAsync()
     {
         if (sessionState is not null)
@@ -61,25 +59,6 @@ else
 
         await hubConnection.StartAsync();
     }
-
-    //protected async override Task OnAfterRenderAsync(bool firstRender)
-    //{
-    //    if (firstRender)
-    //    {
-    //        isConnected = true;
-    //        await LoadStateAsync();
-    //        StateHasChanged();
-    //    }
-    //}
-
-    //private async Task LoadStateAsync()
-    //{
-    //    var userState = await ProtectedSessionStore.GetAsync<User>("user");
-    //    if (userState.Success)
-    //    {
-    //        currentUser = userState.Value;
-    //    }
-    //}
 
     private async Task Send()
     {

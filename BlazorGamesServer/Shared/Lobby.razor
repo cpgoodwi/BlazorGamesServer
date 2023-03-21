@@ -1,0 +1,51 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<h3>Lobby</h3>
+
+<ul>
+    @if (LobbyList is not null)
+    {
+        @foreach (var user in LobbyList)
+        {
+            <li>
+                @user.Name (@user.Type)
+                @*TODO: Remove user Id details after development but keep for debugging*@
+                <details>@user.Id</details>
+            </li>
+        }
+    }
+</ul>
+
+@code {
+    [CascadingParameter]
+    private SessionStateProvider? sessionState { get; set; }
+
+    [Parameter]
+    public List<User>? LobbyList { get; set; }
+
+    private HubConnection? lobbyHubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        lobbyHubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/lobbyhub"))
+            .Build();
+
+        lobbyHubConnection.On("LobbyChange", () =>
+        {
+            InvokeAsync(StateHasChanged);
+        });
+
+        await lobbyHubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (lobbyHubConnection is not null)
+        {
+            await lobbyHubConnection.DisposeAsync();
+        }
+    }
+}

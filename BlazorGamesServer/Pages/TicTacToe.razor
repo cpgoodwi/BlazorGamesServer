@@ -27,22 +27,7 @@
 
 <button @onclick="ResetGame">Reset Game</button>
 
-@*TODO: extract lobby to separate reusable component and add per game chat hub*@
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Id</th>
-    </tr>
-    @foreach (var user in TicTacToeGame.Lobby)
-    {
-        <tr>
-            <td>@user.Name</td>
-            <td>@user.Type</td>
-            <td>@user.Id</td>
-        </tr>
-    }
-</table>
+<Lobby LobbyList="@TicTacToeGame.Lobby" />
 
 @code {
     [CascadingParameter]
@@ -130,15 +115,20 @@
 
     public async ValueTask DisposeAsync()
     {
+        if (lobbyHubConnection is not null && currentUser is not null)
+        {
+            await TicTacToeGame.LobbyRemoveUserAsync(currentUser.Id);
+            await lobbyHubConnection.SendAsync("UpdateLobby");
+        }
+
         if (ticTacToeHubConnection is not null)
         {
             await ticTacToeHubConnection.DisposeAsync();
         }
 
-        if (lobbyHubConnection is not null && currentUser is not null)
+        if (lobbyHubConnection is not null)
         {
-            await TicTacToeGame.LobbyRemoveUserAsync(currentUser.Id);
-            await lobbyHubConnection.SendAsync("UpdateLobby");
+            await lobbyHubConnection.DisposeAsync();
         }
     }
 }
