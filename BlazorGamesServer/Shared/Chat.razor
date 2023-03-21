@@ -1,0 +1,70 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<h3>Chat</h3>
+
+
+<label>
+    Message:
+    <input @bind="messageInput" size="50" required />
+</label>
+<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+
+<ul>
+    @foreach (var messagePair in messagePairs)
+    {
+        <li>@messagePair.user.Name (@messagePair.user.Type): @messagePair.message</li>
+    }
+</ul>
+
+@code {
+    [CascadingParameter]
+    private SessionStateProvider? sessionState { get; set; }
+
+    private HubConnection? chatHubConnection;
+
+    private User? currentUser;
+    private List<(User user, string message)> messagePairs = new List<(User, string)>();
+
+    private string? messageInput;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (sessionState is not null)
+        {
+            currentUser = sessionState.currentUser;
+        }
+
+        chatHubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
+            .Build();
+
+        chatHubConnection.On<User, string>("ReceiveMessage", (user, message) =>
+        {
+            var messagePair = (user, message);
+            messagePairs.Add(messagePair);
+            InvokeAsync(StateHasChanged);
+        });
+
+        await chatHubConnection.StartAsync();
+    }
+
+    private async Task Send()
+    {
+        if (chatHubConnection is not null)
+        {
+            await chatHubConnection.SendAsync("SendMessage", currentUser, messageInput);
+        }
+    }
+
+    public bool IsConnected => chatHubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (chatHubConnection is not null)
+        {
+            await chatHubConnection.DisposeAsync();
+        }
+    }
+}

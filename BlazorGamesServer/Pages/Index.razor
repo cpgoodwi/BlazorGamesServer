@@ -1,6 +1,4 @@
 ﻿@page "/"
-@using Microsoft.AspNetCore.SignalR.Client
-@inject NavigationManager Navigation
 @implements IAsyncDisposable
 
 <PageTitle>Home Page</PageTitle>
@@ -10,31 +8,15 @@
     <label>
         @currentUser?.Name (@currentUser?.Type)
     </label>
-    <label>
-        Message:
-        <input @bind="messageInput" size="50" />
-    </label>
-    <button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+    <Chat />
 }
 else
 {
     <p>Loading Session info...</p>
 }
 
-<hr>
-
-<ul>
-    @foreach (var messagePair in messagePairs)
-    {
-        <li>@messagePair.user.Name (@messagePair.user.Type):@messagePair.message</li>
-    }
-</ul>
-
 @code {
-    private HubConnection? hubConnection;
-    private List<(User user, string message)> messagePairs = new List<(User, string)>();
     private User? currentUser;
-    private string? messageInput;
 
     [CascadingParameter]
     private SessionStateProvider? sessionState { get; set; }
@@ -46,35 +28,11 @@ else
             currentUser = sessionState.currentUser;
         }
 
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
-            .Build();
-
-        hubConnection.On<User, string>("ReceiveMessage", (user, message) =>
-        {
-            var messagePair = (user, message);
-            messagePairs.Add(messagePair);
-            InvokeAsync(StateHasChanged);
-        });
-
-        await hubConnection.StartAsync();
+        await Task.CompletedTask; // leaving method here, but this line is to prevent warnings
     }
-
-    private async Task Send()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.SendAsync("SendMessage", currentUser, messageInput);
-        }
-    }
-
-    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection is not null)
-        {
-            await hubConnection.DisposeAsync();
-        }
+        await Task.CompletedTask; // leaving method here, but this line is to prevent warnings
     }
 }
