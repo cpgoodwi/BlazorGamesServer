@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
+@using BlazorGamesServer.Data.Social
 
 <h3>Chat</h3>
 
@@ -13,9 +14,9 @@
 </form>
 
 <ul>
-    @foreach (var messagePair in messagePairs)
+    @foreach (var message in messages)
     {
-        <li>@messagePair.user.Name (@messagePair.user.Type): @messagePair.message</li>
+        <li>@message.ToString()</li>
     }
 </ul>
 
@@ -26,7 +27,7 @@
     private HubConnection? chatHubConnection;
 
     private User? currentUser;
-    private List<(User user, string message)> messagePairs = new List<(User, string)>();
+    private List<Message> messages = new List<Message>();
 
     private string? messageInput;
 
@@ -41,10 +42,9 @@
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
             .Build();
 
-        chatHubConnection.On<User, string>("ReceiveMessage", (user, message) =>
+        chatHubConnection.On<Message>("ReceiveMessage", (message) =>
         {
-            var messagePair = (user, message);
-            messagePairs.Add(messagePair);
+            messages.Add(new Message(message.Sender, message.Content));
             InvokeAsync(StateHasChanged);
         });
 
@@ -53,9 +53,9 @@
 
     private async Task Send()
     {
-        if (chatHubConnection is not null)
+        if (chatHubConnection is not null && currentUser is not null && messageInput is not null)
         {
-            await chatHubConnection.SendAsync("SendMessage", currentUser, messageInput);
+            await chatHubConnection.SendAsync("SendMessage", new Message(currentUser, messageInput));
         }
     }
 
