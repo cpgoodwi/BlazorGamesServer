@@ -2,11 +2,11 @@
 
 namespace BlazorGamesServer.Hubs
 {
-    public class LobbyHub : Hub
+    public class LobbyHub : SocialHub
     {
-        public async Task UpdateLobby()
+        public async Task UpdateLobby(string roomName)
         {
-            await Clients.All.SendAsync("LobbyChange");
+            await Clients.Group(roomName).SendAsync("LobbyChange");
         }
     }
 }

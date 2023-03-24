@@ -24,6 +24,10 @@
     [CascadingParameter]
     private SessionStateProvider? sessionState { get; set; }
 
+    [Parameter]
+    public string? RoomName { get; set; }
+    private string? roomName { get; set; }
+
     private HubConnection? chatHubConnection;
 
     private User? currentUser;
@@ -48,14 +52,33 @@
             InvokeAsync(StateHasChanged);
         });
 
+        chatHubConnection.On<User>("UserJoined", (user) =>
+        {
+            messages.Add(new Message(user, "joined the chat."));
+            InvokeAsync(StateHasChanged);
+        });
+
+        chatHubConnection.On<User>("UserLeft", (user) =>
+        {
+            messages.Add(new Message(user, "left the chat."));
+            InvokeAsync(StateHasChanged);
+        });
+
         await chatHubConnection.StartAsync();
+
+        roomName = RoomName ?? "default";
+        if (currentUser is not null)
+        {
+            // TODO: maybe try not tying JoinRoom to the chat component...
+            await chatHubConnection.SendAsync("JoinRoom", currentUser, RoomName);
+        }
     }
 
     private async Task Send()
     {
         if (chatHubConnection is not null && currentUser is not null && messageInput is not null)
         {
-            await chatHubConnection.SendAsync("SendMessage", new Message(currentUser, messageInput));
+            await chatHubConnection.SendAsync("SendMessage", new Message(currentUser, messageInput), roomName);
         }
     }
 
@@ -65,6 +88,7 @@
     {
         if (chatHubConnection is not null)
         {
+            await chatHubConnection.SendAsync("LeaveRoom", currentUser, roomName);
             await chatHubConnection.DisposeAsync();
         }
     }

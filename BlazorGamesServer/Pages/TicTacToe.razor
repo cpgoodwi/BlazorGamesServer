@@ -28,8 +28,8 @@
 <button @onclick="ResetGame">Reset Game</button>
 
 <div id="social">
-    <Lobby LobbyList="@TicTacToeGame.Lobby" />
-    <Chat />
+    <Lobby LobbyList="@TicTacToeGame.Lobby" RoomName="tictactoe"/>
+    <Chat RoomName="tictactoe" />
 </div>
 
 @code {

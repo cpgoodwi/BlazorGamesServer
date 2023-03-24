@@ -23,6 +23,10 @@
     private SessionStateProvider? sessionState { get; set; }
 
     [Parameter]
+    public string? RoomName { get; set; }
+    private string? roomName { get; set; }
+
+    [Parameter]
     public List<User>? LobbyList { get; set; }
 
     private HubConnection? lobbyHubConnection;
@@ -39,6 +43,9 @@
         });
 
         await lobbyHubConnection.StartAsync();
+
+        roomName = RoomName ?? "default";
+
     }
 
     public async ValueTask DisposeAsync()
