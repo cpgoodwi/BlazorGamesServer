@@ -16,7 +16,14 @@ namespace BlazorGamesServer.Hubs
                 currentRoom = new Room(roomName);
                 _rooms[roomName] = currentRoom;
             }
-            currentRoom.Users.Add(user);
+
+            // TODO: understand how to use rooms to retrieve lobby user lists...
+            if (!currentRoom.Users.Any(member => member.Id == user.Id))
+            {
+                currentRoom.Users.Add(user);
+            }
+
+            Console.WriteLine(!currentRoom.Users.Contains(user));
 
             await Clients.Group(roomName).SendAsync("UserJoined", user);
 

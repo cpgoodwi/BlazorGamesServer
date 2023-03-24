@@ -16,12 +16,22 @@ else
     public RenderFragment? ChildContent { get; set; }
 
     public User? currentUser { get; set; }
+    public string? currentRoomName { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         var userState = await ProtectedSessionStore.GetAsync<User>("user");
         currentUser = userState.Success ? userState.Value : null;
+
+        var userRoom = await ProtectedSessionStore.GetAsync<string>("room");
+        currentRoomName = userRoom.Success ? userRoom.Value : null;
+
         isLoaded = true;
+    }
+
+    public async Task SetRoomName(string roomName)
+    {
+        await ProtectedSessionStore.SetAsync("room", roomName);
     }
 
 }

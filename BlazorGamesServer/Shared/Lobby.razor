@@ -22,12 +22,11 @@
     [CascadingParameter]
     private SessionStateProvider? sessionState { get; set; }
 
-    [Parameter]
-    public string? RoomName { get; set; }
     private string? roomName { get; set; }
 
     [Parameter]
     public List<User>? LobbyList { get; set; }
+    private List<User>? lobbyList { get; set; }
 
     private HubConnection? lobbyHubConnection;
 
@@ -37,14 +36,16 @@
             .WithUrl(Navigation.ToAbsoluteUri("/lobbyhub"))
             .Build();
 
-        lobbyHubConnection.On("LobbyChange", () =>
+        lobbyHubConnection.On<List<User>>("LobbyChange", (userList) =>
         {
+            lobbyList = userList;
             InvokeAsync(StateHasChanged);
         });
 
         await lobbyHubConnection.StartAsync();
 
-        roomName = RoomName ?? "default";
+        roomName = sessionState?.currentRoomName ?? "default";
+        await lobbyHubConnection.SendAsync("UpdateLobby", roomName);
 
     }
 

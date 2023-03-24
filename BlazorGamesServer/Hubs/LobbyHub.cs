@@ -6,7 +6,7 @@ namespace BlazorGamesServer.Hubs
     {
         public async Task UpdateLobby(string roomName)
         {
-            await Clients.Group(roomName).SendAsync("LobbyChange");
+            await Clients.Group(roomName).SendAsync("LobbyChange", _rooms[roomName].Users);
         }
     }
 }
