@@ -68,11 +68,11 @@
         await chatHubConnection.StartAsync();
 
         roomName = RoomName ?? "default";
-        if (currentUser is not null)
-        {
-            // TODO: maybe try not tying JoinRoom to the chat component...
-            await chatHubConnection.SendAsync("JoinRoom", currentUser, RoomName);
-        }
+        //if (currentUser is not null)
+        //{
+        //     TODO: maybe try not tying JoinRoom to the chat component...
+        //    await chatHubConnection.SendAsync("JoinRoom", currentUser, RoomName);
+        //}
     }
 
     private async Task Send()

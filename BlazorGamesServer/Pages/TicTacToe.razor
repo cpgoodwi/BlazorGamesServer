@@ -44,6 +44,7 @@
 
     private readonly string roomName = "tictactoe";
     private User? currentUser;
+    private string? currentRoomName;
     private List<User> lobby = new List<User>(); // TODO: Get lobby to work with SignalR
 
     protected override async Task OnInitializedAsync()
@@ -51,7 +52,10 @@
         // Loading page variables on initialize
         if (sessionState is not null)
         {
+            await sessionState.SetRoomName("tictactoe");
+
             currentUser = sessionState.currentUser;
+            currentRoomName = sessionState.currentRoomName;
         }
 
         board = await TicTacToeGame.GetBoardAsync();
@@ -73,6 +77,12 @@
         {
             // TODO: maybe try not tying JoinRoom to the chat component...
             await ticTacToeHubConnection.SendAsync("JoinRoom", currentUser, roomName);
+        }
+
+        if (currentUser is not null && currentRoomName is not null)
+        {
+            // TODO: maybe try not tying JoinRoom to the chat component...
+            await ticTacToeHubConnection.SendAsync("JoinRoom", currentUser, currentRoomName);
         }
 
         // handling lobby hub connection
