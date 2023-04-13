@@ -1,4 +1,6 @@
-﻿@if (isLoaded)
+﻿@inject UserStatsService UserStats
+
+@if (isConnected)
 {
     <CascadingValue Value="@this">
         @ChildContent
@@ -6,22 +8,63 @@
 }
 else
 {
-    <p>Loading...</p>
+    <p>Loading Session Information...</p>
 }
 
 @code {
     private bool isLoaded;
+    private bool isConnected;
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    private int userCount;
 
     public User? currentUser { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var userState = await ProtectedSessionStore.GetAsync<User>("user");
-        currentUser = userState.Success ? userState.Value : null;
-        isLoaded = true;
+        userCount = await UserStats.GetCountAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // TODO: look into a more elegant way to load session state this...
+        if (firstRender)
+        {
+            isConnected = false;
+            await LoadStateAsync();
+            StateHasChanged();
+        }
+
+        await LoadStateAsync();
+        isConnected = true;
+
+    }
+
+    private async Task LoadStateAsync()
+    {
+        var userState = await ProtectedSessionStore.GetAsync<User>("user");
+        if (!userState.Success)
+        {
+            await ProtectedSessionStore.SetAsync("user", new User($"guest{userCount}", UserType.Guest));
+            await UserStats.IncreaseCountAsync();
+        }
+        else
+        {
+            isLoaded = true;
+            currentUser = userState.Value;
+            StateHasChanged();
+        }
+    }
+
+    public async Task UpdateSessionUser(User newUserInfo)
+    {
+        currentUser = newUserInfo;
+        if (currentUser is not null)
+        {
+            Console.WriteLine(currentUser.Name);
+            await ProtectedSessionStore.SetAsync("user", currentUser);
+        }
+    }
 }

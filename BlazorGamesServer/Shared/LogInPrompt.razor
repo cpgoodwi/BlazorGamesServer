@@ -1,27 +1,48 @@
 ﻿@using BlazorGamesServer.Data
 
-<h4>Log In Prompt</h4>
+@if (isGuest)
+{
+    <h4>Log In Prompt</h4>
 
-@*TODO: use SignalR to reload state without refreshing page*@
-<form> @*form because I want it to reload after login I think...*@
-    <label>
-        Username:
-        <input @bind="userName" size="20" required />
-    </label>
-    <button @onclick="logInSubmit">Log In</button>
-</form>
+    @*TODO: use SignalR to reload state without refreshing page*@
+    <form>
+        @*form because I want it to reload after login I think...*@
+        <label>
+            Username:
+            <input @bind="userName" size="20" required />
+        </label>
+        <button @onclick="logInSubmit">Log In</button>
+    </form>
+}
 
 @code {
+    [CascadingParameter]
+    private SessionStateProvider? sessionState { get; set; }
+
+    private User? currentUser;
+    private bool isGuest;
+
     private string? userName;
+
+    protected override void OnInitialized()
+    {
+        if (sessionState is not null)
+        {
+            currentUser = sessionState.currentUser;
+        }
+
+        if (currentUser is not null)
+        {
+            isGuest = currentUser.Type == UserType.Guest;
+        }
+    }
 
     private async Task logInSubmit()
     {
-        var userState = await ProtectedSessionStore.GetAsync<User>("user");
-        if (userState.Success)
+        if (currentUser is not null)
         {
-            userState.Value?.SetName(userName);
-            await ProtectedSessionStore.SetAsync("user", userState.Value);
-            StateHasChanged();
+            currentUser.SetName(userName);
+            await sessionState.UpdateSessionUser(currentUser);
         }
     }
 }

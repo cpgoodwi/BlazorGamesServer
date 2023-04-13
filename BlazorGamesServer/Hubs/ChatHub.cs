@@ -11,7 +11,7 @@ namespace BlazorGamesServer.Hubs
 
         public async Task SendMessage(Message message, string roomName)
         {
-            if (_rooms.TryGetValue(roomName,out var currentRoom))
+            if (_rooms.TryGetValue(roomName, out var currentRoom))
             {
                 currentRoom.Messages.Add(message);
             }

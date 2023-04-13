@@ -11,11 +11,19 @@ namespace BlazorGamesServer.Hubs
 
         public async Task JoinRoom(User user, string roomName)
         {
+            // if room doesn't exist, create it
             if (!_rooms.TryGetValue(roomName, out var currentRoom))
             {
                 currentRoom = new Room(roomName);
                 _rooms[roomName] = currentRoom;
             }
+
+            // if user exists in room, do not add
+            if (currentRoom.Users.Any(u => u.Id == user.Id))
+            {
+                Console.WriteLine("user is in the room");
+            }
+
             currentRoom.Users.Add(user);
 
             await Clients.Group(roomName).SendAsync("UserJoined", user);

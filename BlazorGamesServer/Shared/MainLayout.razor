@@ -4,7 +4,7 @@
 <PageTitle>Blazor Games Server</PageTitle>
 
 <NavMenu />
-
+@*
 @if (isConnected) // checking for session info before rendering adding the content to render
 {
     @if (isGuest)
@@ -22,6 +22,12 @@ else
 {
     <p>checking session info...</p>
 }
+*@
+<SessionStateProvider>
+    <LogInPrompt />
+    <hr />
+    <main> @Body </main>
+</SessionStateProvider>
 
 @code {
     private int userCount;

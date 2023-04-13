@@ -29,10 +29,20 @@
     [Parameter]
     public List<User>? LobbyList { get; set; }
 
+    private User? currentUser;
+
     private HubConnection? lobbyHubConnection;
 
     protected override async Task OnInitializedAsync()
     {
+        if (sessionState is not null)
+        {
+            currentUser = sessionState.currentUser;
+            //Console.WriteLine(currentUser?.Id);
+            if (LobbyList is not null && currentUser is not null)
+                LobbyList.Add(currentUser);
+        }
+
         lobbyHubConnection = new HubConnectionBuilder()
             .WithUrl(Navigation.ToAbsoluteUri("/lobbyhub"))
             .Build();
@@ -45,6 +55,7 @@
         await lobbyHubConnection.StartAsync();
 
         roomName = RoomName ?? "default";
+        await lobbyHubConnection.SendAsync("UpdateLobby", roomName);
 
     }
 
@@ -52,6 +63,7 @@
     {
         if (lobbyHubConnection is not null)
         {
+            await lobbyHubConnection.SendAsync("LeaveRoom", currentUser, roomName);
             await lobbyHubConnection.DisposeAsync();
         }
     }

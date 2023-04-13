@@ -40,6 +40,7 @@
         if (sessionState is not null)
         {
             currentUser = sessionState.currentUser;
+            //Console.WriteLine(currentUser?.Id);
         }
 
         chatHubConnection = new HubConnectionBuilder()

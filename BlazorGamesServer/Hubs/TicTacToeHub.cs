@@ -2,7 +2,7 @@
 
 namespace BlazorGamesServer.Hubs
 {
-    public class TicTacToeHub : Hub
+    public class TicTacToeHub : SocialHub
     {
         public async Task UpdateBoard()
         {

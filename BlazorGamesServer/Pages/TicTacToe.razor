@@ -28,8 +28,8 @@
 <button @onclick="ResetGame">Reset Game</button>
 
 <div id="social">
-    <Lobby LobbyList="@TicTacToeGame.Lobby" RoomName="tictactoe"/>
-    <Chat RoomName="tictactoe" />
+    <Lobby LobbyList="@TicTacToeGame.Lobby" RoomName="@roomName"/>
+    <Chat RoomName="@roomName" />
 </div>
 
 @code {
@@ -37,11 +37,12 @@
     private SessionStateProvider? sessionState { get; set; }
 
     private HubConnection? ticTacToeHubConnection;
-    private HubConnection? lobbyHubConnection;
+    //private HubConnection? lobbyHubConnection;
 
     private BlazorGamesServer.Data.TicTacToe.Tile[,]? board; // TODO: maybe change this to array of chars
     private bool isXMove = false;
 
+    private readonly string roomName = "tictactoe";
     private User? currentUser;
     private List<User> lobby = new List<User>(); // TODO: Get lobby to work with SignalR
 
@@ -68,28 +69,33 @@
         });
 
         await ticTacToeHubConnection.StartAsync();
-
-        // handling lobby hub connection
-        lobbyHubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/lobbyhub"))
-            .Build();
-
-        lobbyHubConnection.On("LobbyChange", () =>
-        {
-            InvokeAsync(StateHasChanged);
-        });
-
-        await lobbyHubConnection.StartAsync();
-
         if (currentUser is not null)
         {
-            await TicTacToeGame.LobbyAddUserAsync(currentUser);
-
-            if (lobbyHubConnection is not null)
-            {
-                await lobbyHubConnection.SendAsync("UpdateLobby");
-            }
+            // TODO: maybe try not tying JoinRoom to the chat component...
+            await ticTacToeHubConnection.SendAsync("JoinRoom", currentUser, roomName);
         }
+
+        // handling lobby hub connection
+        //lobbyHubConnection = new HubConnectionBuilder()
+        //    .WithUrl(Navigation.ToAbsoluteUri("/lobbyhub"))
+        //    .Build();
+
+        //lobbyHubConnection.On("LobbyChange", () =>
+        //{
+        //    InvokeAsync(StateHasChanged);
+        //});
+
+        //await lobbyHubConnection.StartAsync();
+
+        //if (currentUser is not null)
+        //{
+        //    await TicTacToeGame.LobbyAddUserAsync(currentUser);
+
+        //    if (lobbyHubConnection is not null)
+        //    {
+        //        await lobbyHubConnection.SendAsync("UpdateLobby");
+        //    }
+        //}
     }
 
     private async Task ResetGame()
@@ -118,20 +124,21 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (lobbyHubConnection is not null && currentUser is not null)
+        if (/*lobbyHubConnection is not null &&*/ currentUser is not null)
         {
             await TicTacToeGame.LobbyRemoveUserAsync(currentUser.Id);
-            await lobbyHubConnection.SendAsync("UpdateLobby");
+            //await lobbyHubConnection.SendAsync("UpdateLobby");
         }
 
         if (ticTacToeHubConnection is not null)
         {
+            await ticTacToeHubConnection.SendAsync("LeaveRoom", currentUser, roomName);
             await ticTacToeHubConnection.DisposeAsync();
         }
 
-        if (lobbyHubConnection is not null)
-        {
-            await lobbyHubConnection.DisposeAsync();
-        }
+        //if (lobbyHubConnection is not null)
+        //{
+        //    await lobbyHubConnection.DisposeAsync();
+        //}
     }
 }
