@@ -52,8 +52,6 @@
         // Loading page variables on initialize
         if (sessionState is not null)
         {
-            await sessionState.SetRoomName("tictactoe");
-
             currentUser = sessionState.currentUser;
             currentRoomName = sessionState.currentRoomName;
         }
